@@ -9,7 +9,7 @@
 
 ## 사용 모델 및 기술 스택
 
-이 프로젝트는 OpenAI API를 활용한 Streamlit 기반 웹앱입니다.
+해당 프로젝트는 OpenAI API를 활용한 Streamlit 기반 웹앱입니다.
 
 - 사용 모델: `gpt-5.4`
 - 대체 가능 모델: `gpt-4.1-mini`
