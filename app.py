@@ -862,3 +862,43 @@ if student_input:
             )
             add_assistant_message(reply)
             st.rerun()
+
+with st.expander("전체 대화 내용 보기", expanded=False):
+    if "messages" in st.session_state:
+        for msg in st.session_state.messages:
+            role = msg.get("role", "")
+            content = msg.get("content", "")
+
+            if role == "user":
+                st.markdown(f"### 👤 학생")
+                st.markdown(content)
+            else:
+                st.markdown(f"### 🤖 튜터")
+                st.markdown(content)
+
+            st.markdown("---")
+
+from datetime import datetime
+
+if "messages" in st.session_state:
+    chat_text = ""
+
+    chat_text += "[교사 사전 입력]\n"
+    chat_text += f"교과 영역: {subject}\n"
+    chat_text += f"활동 유형: {activity_type}\n"
+    chat_text += f"논의 주제: {topic}\n"
+    chat_text += f"학습 목표: {goal}\n\n"
+
+    chat_text += "[대화 내용]\n\n"
+
+    for msg in st.session_state.messages:
+        role = "학생" if msg.get("role") == "user" else "AI 튜터"
+        content = msg.get("content", "")
+        chat_text += f"{role}:\n{content}\n\n"
+
+    st.sidebar.download_button(
+        label="전체 대화 TXT 저장",
+        data=chat_text,
+        file_name=f"chat_log_{datetime.now().strftime('%Y%m%d_%H%M')}.txt",
+        mime="text/plain"
+    )
