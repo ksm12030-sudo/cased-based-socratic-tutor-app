@@ -1,4 +1,5 @@
 import os
+import json
 import base64
 import streamlit as st
 from dotenv import load_dotenv
@@ -22,8 +23,65 @@ MODEL = "gpt-5.4"
 # MODEL = "gpt-4.1-mini"
 
 st.set_page_config(page_title="Socratic Tutor", layout="wide")
-st.title("케이스 기반 Socratic 사고 촉진 GPT")
+st.title("🧠 Case-based Socratic Tutor 🧠")
+st.caption("학습자들의 사회과학적 사고를 실제 사례 기반으로 확장하는 Socratic AI Tutor")
 
+st.markdown("""
+<style>
+
+[data-testid="stSidebar"] {
+    background: #f0f2f6;
+}
+
+.block-container {
+    padding-top: 2rem;
+    max-width: 1100px;
+}
+
+/* 사이드바 버튼 */
+[data-testid="stSidebar"] .stButton > button {
+    width: 100%;
+    border-radius: 10px;
+    padding: 0.6rem 1rem;
+    font-weight: 700;
+    border: none;
+    background-color: #4f46e5;
+    color: white;
+}
+
+[data-testid="stSidebar"] .stButton > button:hover {
+    background-color: #4338ca;
+    color: white;
+}
+
+/* 튜터 답변: 연한 보라 */
+[data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-assistant"]) {
+    background-color: #f3e8ff;
+    border-radius: 16px;
+    padding: 0.8rem;
+    border: 1px solid #d8b4fe;
+}
+
+/* 학생 답변: 연한 핑크 */
+[data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]) {
+    background-color: #ffe4f1;
+    border-radius: 16px;
+    padding: 0.8rem;
+    border: 1px solid #f9a8d4;
+}
+
+/* 채팅 입력창 */
+[data-testid="stChatInput"] {
+    background-color: white;
+    border-radius: 14px;
+}
+
+/* 입력창, 텍스트박스 둥글게 */
+input, textarea {
+    border-radius: 10px !important;
+}
+</style>
+""", unsafe_allow_html=True)
 
 # =========================
 # 세션 상태
@@ -42,6 +100,19 @@ if "expansion_question_count" not in st.session_state:
 
 if "case_presented" not in st.session_state:
     st.session_state.case_presented = False
+
+if "thinking_map" not in st.session_state:
+    st.session_state.thinking_map = {
+        "claim": "",
+        "reasons": [],
+        "assumptions": [],
+        "counterpoints": [],
+        "revised_claim": "",
+        "open_questions": []
+    }
+
+if "thinking_map_history" not in st.session_state:
+    st.session_state.thinking_map_history = []
 
 
 # =========================
@@ -100,6 +171,177 @@ def add_assistant_message(text):
     st.session_state.messages.append(
         {"role": "assistant", "content": text}
     )
+
+
+def default_thinking_map():
+    return {
+        "claim": "",
+        "reasons": [],
+        "assumptions": [],
+        "counterpoints": [],
+        "revised_claim": "",
+        "open_questions": []
+    }
+
+
+def safe_list(value):
+    if isinstance(value, list):
+        return [str(v).strip() for v in value if str(v).strip()]
+    if isinstance(value, str) and value.strip():
+        return [value.strip()]
+    return []
+
+
+def merge_unique(old_items, new_items, max_items=5):
+    merged = []
+    for item in old_items + new_items:
+        item = str(item).strip()
+        if item and item not in merged:
+            merged.append(item)
+    return merged[-max_items:]
+
+
+def update_thinking_map(student_input, phase):
+    """
+    학생 답변을 바탕으로 사고 지도를 갱신한다.
+    GPT 응답은 JSON만 받도록 해서 앱 내부 데이터로 사용한다.
+    """
+    if not student_input.strip():
+        return
+
+    current_map = st.session_state.get("thinking_map", default_thinking_map())
+
+    try:
+        response = client.responses.create(
+            model=MODEL,
+            input=[
+                {
+                    "role": "system",
+                    "content": """
+너는 학생의 사고과정을 구조화하는 분석기다.
+반드시 JSON만 출력한다. 설명 문장, 코드블록, 마크다운은 쓰지 않는다.
+
+JSON 형식:
+{
+  "claim": "학생의 핵심 주장 1문장. 없으면 빈 문자열",
+  "reasons": ["근거"],
+  "assumptions": ["숨은 전제나 판단 기준"],
+  "counterpoints": ["학생이 언급했거나 대화에서 드러난 반대 관점/예외"],
+  "revised_claim": "수정되거나 정교화된 주장. 없으면 빈 문자열",
+  "open_questions": ["더 생각해볼 질문"]
+}
+
+규칙:
+- 학생이 직접 말하지 않은 내용을 과하게 invent 하지 않는다.
+- 단, 숨은 전제는 학생 답변에서 합리적으로 추론 가능한 범위에서만 쓴다.
+- 각 배열은 최대 3개만 작성한다.
+- 짧고 쉬운 한국어로 쓴다.
+"""
+                },
+                {
+                    "role": "user",
+                    "content": f"""
+논의 주제: {topic}
+학습 목표: {goal}
+현재 흐름: {phase}
+
+현재 사고 지도:
+{json.dumps(current_map, ensure_ascii=False)}
+
+최근 대화:
+{build_conversation_text(max_messages=8)}
+
+방금 학생 답변:
+{student_input}
+"""
+                }
+            ]
+        )
+
+        raw = response.output_text.strip()
+        if raw.startswith("```"):
+            raw = raw.strip("`")
+            raw = raw.replace("json", "", 1).strip()
+
+        parsed = json.loads(raw)
+
+        updated = default_thinking_map()
+        updated["claim"] = parsed.get("claim") or current_map.get("claim", "")
+        updated["revised_claim"] = parsed.get("revised_claim") or current_map.get("revised_claim", "")
+        updated["reasons"] = merge_unique(
+            safe_list(current_map.get("reasons", [])),
+            safe_list(parsed.get("reasons", []))
+        )
+        updated["assumptions"] = merge_unique(
+            safe_list(current_map.get("assumptions", [])),
+            safe_list(parsed.get("assumptions", []))
+        )
+        updated["counterpoints"] = merge_unique(
+            safe_list(current_map.get("counterpoints", [])),
+            safe_list(parsed.get("counterpoints", []))
+        )
+        updated["open_questions"] = merge_unique(
+            safe_list(current_map.get("open_questions", [])),
+            safe_list(parsed.get("open_questions", []))
+        )
+
+        st.session_state.thinking_map = updated
+        st.session_state.thinking_map_history.append(
+            {
+                "phase": phase,
+                "student_input": student_input,
+                "map": updated
+            }
+        )
+
+    except Exception:
+        # 사고 지도 기능이 실패해도 수업 진행은 멈추지 않게 둔다.
+        return
+
+
+def render_thinking_map():
+    thinking_map = st.session_state.get("thinking_map", default_thinking_map())
+
+    st.sidebar.divider()
+    st.sidebar.subheader("🧠 나의 사고 지도")
+
+    if not any([
+        thinking_map.get("claim"),
+        thinking_map.get("reasons"),
+        thinking_map.get("assumptions"),
+        thinking_map.get("counterpoints"),
+        thinking_map.get("revised_claim")
+    ]):
+        st.sidebar.caption("학생 답변이 들어오면 자동으로 채워져.")
+        return
+
+    if thinking_map.get("claim"):
+        st.sidebar.markdown("**주장**")
+        st.sidebar.info(thinking_map["claim"])
+
+    if thinking_map.get("reasons"):
+        st.sidebar.markdown("**근거**")
+        for reason in thinking_map["reasons"]:
+            st.sidebar.markdown(f"- {reason}")
+
+    if thinking_map.get("assumptions"):
+        st.sidebar.markdown("**숨은 전제 / 판단 기준**")
+        for assumption in thinking_map["assumptions"]:
+            st.sidebar.markdown(f"- {assumption}")
+
+    if thinking_map.get("counterpoints"):
+        st.sidebar.markdown("**반례 / 다른 관점**")
+        for counterpoint in thinking_map["counterpoints"]:
+            st.sidebar.markdown(f"- {counterpoint}")
+
+    if thinking_map.get("revised_claim"):
+        st.sidebar.markdown("**수정된 생각**")
+        st.sidebar.success(thinking_map["revised_claim"])
+
+    if thinking_map.get("open_questions"):
+        with st.sidebar.expander("더 생각해볼 질문"):
+            for question in thinking_map["open_questions"]:
+                st.markdown(f"- {question}")
 
 
 # =========================
@@ -381,6 +623,12 @@ def present_case():
 
 
 # =========================
+# 사고 지도 표시
+# =========================
+render_thinking_map()
+
+
+# =========================
 # 사이드바 버튼
 # =========================
 st.sidebar.divider()
@@ -395,6 +643,8 @@ if st.sidebar.button("수업 시작"):
         st.session_state.phase = "opening"
         st.session_state.case_presented = False
         st.session_state.expansion_question_count = 0
+        st.session_state.thinking_map = default_thinking_map()
+        st.session_state.thinking_map_history = []
 
         opening = call_gpt(
             user_text="학생에게 바로 보여줄 첫 발화를 작성해. 실제 사례나 링크는 절대 제시하지 마.",
@@ -405,14 +655,6 @@ if st.sidebar.button("수업 시작"):
 
         add_assistant_message(opening)
         st.session_state.phase = "structure"
-        st.rerun()
-
-
-if st.sidebar.button("현실 사례 연결"):
-    if not st.session_state.class_started:
-        st.sidebar.warning("먼저 수업을 시작해줘.")
-    else:
-        present_case()
         st.rerun()
 
 
@@ -437,13 +679,15 @@ if st.sidebar.button("대화 초기화"):
     st.session_state.phase = "opening"
     st.session_state.case_presented = False
     st.session_state.expansion_question_count = 0
+    st.session_state.thinking_map = default_thinking_map()
+    st.session_state.thinking_map_history = []
     st.rerun()
 
 
 # =========================
 # 본문
 # =========================
-st.subheader("학생 대화 화면")
+st.subheader("대화를 시작해보세요!")
 
 with st.expander("현재 수업 설정 보기"):
     st.write(f"교과 영역: {subject}")
@@ -459,7 +703,7 @@ for msg in st.session_state.messages:
 # =========================
 # 학생 입력 처리
 # =========================
-student_input = st.chat_input("학생 답변을 입력해")
+student_input = st.chat_input("답변을 입력하세요.")
 
 if student_input:
     if not st.session_state.class_started:
@@ -470,6 +714,7 @@ if student_input:
         )
 
         phase = st.session_state.phase
+        update_thinking_map(student_input, phase)
 
         # 근거 필수 phase
         reason_required_phases = [
