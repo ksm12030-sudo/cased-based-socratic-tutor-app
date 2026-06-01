@@ -4,7 +4,8 @@
 
 해당 앱은 학생이 사회 문제에 대해 자신의 입장, 근거, 전제, 반대 관점, 현실 사례를 단계적으로 탐색할 수 있도록 돕는 것을 목표로 합니다. 단순히 정답을 알려주는 챗봇이 아니라, 학생이 스스로 생각을 구조화하고 자신의 사고 변화를 돌아볼 수 있도록 설계되었습니다.
 
-<img width="1920" height="1353" alt="image" src="https://github.com/user-attachments/assets/9eaceb00-2a58-43f5-9ed0-f935dc695292" />
+<img width="1920" height="1479" alt="screencapture-cased-based-socratic-tutor-streamlit-app-2026-06-02-01_28_16" src="https://github.com/user-attachments/assets/fa895f38-0e0f-4271-b2b7-3bbd4b977763" />
+
 
 
 ## 사용 모델 및 기술 스택
@@ -60,6 +61,7 @@ socratic_rag_app/
 - 실제 사회 사례 및 기사 링크 기반 사고 확장
 - 교재 또는 통계자료 이미지 업로드 가능
 - 대화 흐름 마무리 및 협동 토론 질문 제안
+- 학생의 사고 흐름 실시간으로 정리
 
 ## 활동 유형
 
@@ -160,4 +162,3 @@ python-dotenv
 - PDF 기반 RAG 기능 추가
 - 학생별 대화 기록 저장
 - 교사용 수업 템플릿 저장
-- 실제 기사 및 통계자료 추천 기능 고도화
