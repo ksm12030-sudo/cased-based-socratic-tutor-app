@@ -4,7 +4,8 @@
 
 해당 앱은 학생이 사회 문제에 대해 자신의 입장, 근거, 전제, 반대 관점, 현실 사례를 단계적으로 탐색할 수 있도록 돕는 것을 목표로 합니다. 단순히 정답을 알려주는 챗봇이 아니라, 학생이 스스로 생각을 구조화하고 자신의 사고 변화를 돌아볼 수 있도록 설계되었습니다.
 
-<img width="1920" height="1479" alt="screencapture-cased-based-socratic-tutor-streamlit-app-2026-06-02-01_28_16" src="https://github.com/user-attachments/assets/fa895f38-0e0f-4271-b2b7-3bbd4b977763" />
+<img width="1920" height="1549" alt="screencapture-cased-based-socratic-tutor-streamlit-app-2026-06-02-02_17_30" src="https://github.com/user-attachments/assets/66e14801-a7af-482e-a5ba-508e6ae947f6" />
+
 
 
 
@@ -62,6 +63,8 @@ socratic_rag_app/
 - 교재 또는 통계자료 이미지 업로드 가능
 - 대화 흐름 마무리 및 협동 토론 질문 제안
 - 학생의 사고 흐름 실시간으로 정리
+- 전체 대화 내용 보기
+- 전체 대화 내용 .txt 로 저장 기능 
 
 ## 활동 유형
 
@@ -125,8 +128,11 @@ GPT: 최근에는 디지털 장의사를 통해 과거 게시물이나 검색 �
 이후 GPT는 학생 답변을 바탕으로 근거를 구조화하고, 반대 관점과 현실 사례를 연결합니다.
 
 ### [예시 흐름] 
-<img width="612" height="792" alt="Socratic chat - 웹앱 version_1" src="https://github.com/user-attachments/assets/2a38a7d9-21e9-4cf2-bd5f-7517b17a128e" />
-<img width="612" height="792" alt="Socratic chat - 웹앱 version_2" src="https://github.com/user-attachments/assets/69b839f1-a528-4242-a093-4a281d7c988e" />
+<img width="595" height="842" alt="Socratic Tutor · Streamlit_1" src="https://github.com/user-attachments/assets/e8d2bbac-06f2-44cd-a52e-dc06859111e8" />
+<img width="595" height="842" alt="Socratic Tutor · Streamlit_2" src="https://github.com/user-attachments/assets/1546ba5f-cdea-412c-ba83-9d553e9a6da0" />
+<img width="595" height="842" alt="Socratic Tutor · Streamlit_3" src="https://github.com/user-attachments/assets/130fd542-d075-47c7-9b98-53b58543f13e" />
+<img width="595" height="842" alt="Socratic Tutor · Streamlit_4" src="https://github.com/user-attachments/assets/af4863d7-098b-4c74-997b-1dd3565f6f9f" />
+
 
 
 
