@@ -1,7 +1,5 @@
 # 케이스 기반 Socratic 사고 촉진 GPT
 
-https://cased-based-socratic-tutor.streamlit.app/
-
 고등학생 학습자를 위한 사회과학 사고 촉진 웹앱입니다.
 
 해당 앱은 학생이 사회 문제에 대해 자신의 입장, 근거, 전제, 반대 관점, 현실 사례를 단계적으로 탐색할 수 있도록 돕는 것을 목표로 합니다. 단순히 정답을 알려주는 챗봇이 아니라, 학생이 스스로 생각을 구조화하고 자신의 사고 변화를 돌아볼 수 있도록 설계되었습니다.
@@ -22,10 +20,13 @@ https://cased-based-socratic-tutor.streamlit.app/
 ## 파일 구조
 ```
 socratic_rag_app/
+├─ side bar.png 
+├─ Socratic Tutor Streamlit.png 
 ├─ app.py
 ├─ prompts.py
 ├─ requirements.txt
 ├─ README.md
+├─ web app QR code.png
 └─ .gitignore
 ```
 
